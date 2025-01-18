@@ -1,0 +1,15 @@
+# Use the official Bitnami Spark image as the base
+FROM bitnami/spark:latest
+
+# Switch to root to perform installations
+USER root
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Install the PostgreSQL JDBC driver
+RUN curl -o /opt/bitnami/spark/jars/postgresql-42.7.4.jar \
+    https://jdbc.postgresql.org/download/postgresql-42.7.4.jar
+
+# Switch back to the non-root user for running Spark
+USER 1001
