@@ -12,3 +12,5 @@ DB_PROPERTIES = {
 }
 # Folder containing CSV files
 NEW_DATA_PATH = "/opt/airflow/data/new_month/"
+PROCESSED_DATA_PATH = "/opt/airflow/data/processed/"
+WEBSHOP_ACTIVITIES_TABLE = "webshop_activity_data"

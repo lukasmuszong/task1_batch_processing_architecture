@@ -3,7 +3,7 @@ import re
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
 from misc.parameters import JARS_PATH, NEW_DATA_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
-
+from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 def load_csvs_to_postgres():
     """
@@ -73,8 +73,8 @@ def load_csvs_to_postgres():
                         .format("jdbc") \
                         .option("url", db_url) \
                         .option("dbtable", backup_table_name) \
-                        .option("user", "airflow") \
-                        .option("password", "airflow") \
+                        .option("user", POSTGRES_USER) \
+                        .option("password", POSTGRES_PASSWORD) \
                         .option("driver", "org.postgresql.Driver") \
                         .mode("overwrite") \
                         .save()

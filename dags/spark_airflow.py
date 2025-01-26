@@ -23,7 +23,7 @@ default_args = {
 dag = DAG(
     dag_id='sparking_flow',
     default_args=default_args,
-    schedule_interval = '@daily',
+    schedule_interval = '@monthly',
     catchup=False,
 )
 
@@ -69,15 +69,7 @@ transform_with_spark = SparkSubmitOperator(
     dag=dag,
 )
 
-# Task 5: Submit Spark job
-python_job = SparkSubmitOperator(
-    task_id='python_job',
-    conn_id='spark-conn',
-    application='jobs/python/wordcountjob.py',
-    dag=dag,
-)
-
-# Task 6: End job
+# Task 5: End job
 end = PythonOperator(
     task_id='end',
     python_callable= lambda: print('Jobs completed successfully'),
@@ -85,4 +77,4 @@ end = PythonOperator(
 )
 
 # Define task dependencies
-start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> python_job >> end
+start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> end
