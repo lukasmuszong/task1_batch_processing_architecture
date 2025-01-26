@@ -10,5 +10,5 @@ DB_PROPERTIES = {
     "password": "airflow",
     "driver": "org.postgresql.Driver"
 }
-# New webshop data folder
-DATA_PATH = "/opt/airflow/data/new_month/"
+# Folder containing CSV files
+NEW_DATA_PATH = "/opt/airflow/data/new_month/"

@@ -300,6 +300,8 @@ if __name__ == "__main__":
             db_properties=DB_PROPERTIES
         )
 
+        postgres_integration.display_statistics()
+
         #####
 
         # Add functions to this class

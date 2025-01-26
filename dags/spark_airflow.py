@@ -10,9 +10,6 @@ from misc.parameters import JARS_PATH
 # Add the jobs/python directory to the system path for importing scripts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../jobs/python"))
 
-# Import the function from read_data_from_db.py
-from read_data_from_db import fetch_table_to_dataframe
-
 # Default arguments
 default_args = {
     'owner': 'Lukas Muszong',
@@ -33,7 +30,7 @@ dag = DAG(
 # Task 1: Start job
 start = PythonOperator(
     task_id='start',
-    python_callable= lambda: print('Jobs started'),
+    python_callable= lambda: print('Batch processing jobs are started..'),
     dag=dag,
 )
 # Task 2: Load data
@@ -60,18 +57,7 @@ preprocess_data_task = SparkSubmitOperator(
     verbose=True,
 )
 
-# Task 2: Read data from PostgreSQL
-read_data_task = PythonOperator(
-    task_id='read_data_from_postgres',
-    python_callable=fetch_table_to_dataframe,
-    op_kwargs={
-        'table_name': 'airflow',  # Replace with your table name
-        'output_path': '/opt/airflow/data/'  # Path to save the data as CSV
-    },
-    dag=dag,
-)
-
-# Task 3: Transform data with Spark
+# Task 4: Transform data with Spark
 transform_with_spark = SparkSubmitOperator(
     task_id='transform_data_with_spark',
     conn_id='spark-conn',
@@ -83,7 +69,7 @@ transform_with_spark = SparkSubmitOperator(
     dag=dag,
 )
 
-# Task 4: Submit Spark job
+# Task 5: Submit Spark job
 python_job = SparkSubmitOperator(
     task_id='python_job',
     conn_id='spark-conn',
@@ -91,7 +77,7 @@ python_job = SparkSubmitOperator(
     dag=dag,
 )
 
-# Task 5: End job
+# Task 6: End job
 end = PythonOperator(
     task_id='end',
     python_callable= lambda: print('Jobs completed successfully'),
@@ -99,4 +85,4 @@ end = PythonOperator(
 )
 
 # Define task dependencies
-start >> load_data_backup_task >> preprocess_data_task >> read_data_task >> transform_with_spark >> python_job >> end
+start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> python_job >> end

@@ -1,25 +1,44 @@
 import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
-from misc.parameters import JARS_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
+from misc.parameters import JARS_PATH, NEW_DATA_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
 
 
-def load_csv_to_postgres():
+def load_csvs_to_postgres():
+    """
+        Loads CSV files from a specified folder into PostgreSQL.
+        - Reads all `.csv` files from the specified base folder.
+        - Creates a backup table in PostgreSQL for each file, named `backup_FILENAME`.
+        - Ensures no file overwrites another by dynamically naming PostgreSQL tables.
+
+        Steps:
+            1. Iterate over all `.csv` files in the folder.
+            2. Load each file into a Spark DataFrame.
+            3. Add a column for the `processed_date` to track when the data was processed.
+            4. Write the DataFrame to a PostgreSQL table named `backup_FILENAME`.
+
+        Exception Handling:
+            - If a file cannot be processed, an error message is printed, and the script continues with the next file.
+
+        Folder Structure:
+            - Input Folder: base folder specified in `misc.parameters`.
+
+        Dependencies:
+            - Spark JARs and configuration settings from `misc.parameters`.
+
+        Raises:
+            - RuntimeError for any issues with reading or writing files.
+
+        Returns:
+            None
+        """
     # Database connection details
     db_url = JDBC_URL  # PostgreSQL connection string
-    table_name = 'airflow'  # Target table in PostgreSQL
-    csv_file_path = '/opt/airflow/data/new_month/2019-Oct.csv'  # Path to the CSV file
-    processed_folder = '/opt/airflow/data/processed'  # Folder to move processed files
-
-    # Check if the file exists
-    if not os.path.exists(csv_file_path):
-        print("ERROR: CSV file not found.")
-        print(f"CSV file not found: {csv_file_path}")
-        return
+    base_folder = NEW_DATA_PATH  # Folder containing CSV files
 
     # Initialize Spark session
     spark = SparkSession.builder \
-        .appName("Load CSV to PostgreSQL") \
+        .appName("Load CSVs to PostgreSQL") \
         .config("spark.jars", JARS_PATH) \
         .config("spark.executor.memory", EXECUTOR_MEMORY) \
         .config("spark.executor.cores", EXECUTOR_CORES) \
@@ -28,38 +47,44 @@ def load_csv_to_postgres():
         .getOrCreate()
 
     try:
-        # Read CSV file into a Spark DataFrame
-        print(f"Reading CSV file: {csv_file_path}")
-        try:
-            df = spark.read.format("csv") \
-                .option("header", "true") \
-                .option("inferSchema", "true") \
-                .load(csv_file_path)
-        except Exception as e:
-            raise RuntimeError(f"Failed to read the CSV file: {csv_file_path}. Error: {e}")
+        # Iterate over all files in the base folder
+        for filename in os.listdir(base_folder):
+            if filename.endswith(".csv"):
+                csv_file_path = os.path.join(base_folder, filename)
+                backup_table_name = f"backup_{os.path.splitext(filename)[0]}"  # Table name without the file extension
 
-        # Add a column to track when the data was processed (optional)
-        df = df.withColumn("processed_date", lit(current_date()))
+                print(f"Processing file: {csv_file_path} -> Backup table: {backup_table_name}")
 
-        # Write the DataFrame to PostgreSQL
-        print("Writing data to PostgreSQL...")
-        try:
-            df.write \
-                .format("jdbc") \
-                .option("url", db_url) \
-                .option("dbtable", table_name) \
-                .option("user", "airflow") \
-                .option("password", "airflow") \
-                .option("driver", "org.postgresql.Driver") \
-                .mode("overwrite") \
-                .save()
-        except Exception as e:
-            raise RuntimeError(f"Failed to write data to PostgreSQL table {table_name}. Error: {e}")
+                try:
+                    # Read CSV file into a Spark DataFrame
+                    df = spark.read.format("csv") \
+                        .option("header", "true") \
+                        .option("inferSchema", "true") \
+                        .load(csv_file_path)
 
-        print(f"Data from {csv_file_path} has been successfully loaded into the {table_name} table.")
+                    # Add a column to track when the data was processed
+                    df = df.withColumn("processed_date", lit(current_date()))
+
+                    # Write the DataFrame to PostgreSQL (as a backup table)
+                    print(f"Writing data to PostgreSQL table: {backup_table_name}...")
+                    df.write \
+                        .format("jdbc") \
+                        .option("url", db_url) \
+                        .option("dbtable", backup_table_name) \
+                        .option("user", "airflow") \
+                        .option("password", "airflow") \
+                        .option("driver", "org.postgresql.Driver") \
+                        .mode("overwrite") \
+                        .save()
+
+                    print(
+                        f"Data from {csv_file_path} has been successfully loaded into the {backup_table_name} table.")
+
+                except Exception as e:
+                    print(f"Error processing file {csv_file_path}: {e}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred during processing: {e}")
 
     finally:
         # Stop the Spark session
@@ -67,4 +92,4 @@ def load_csv_to_postgres():
 
 
 if __name__ == "__main__":
-    load_csv_to_postgres()
+    load_csvs_to_postgres()
