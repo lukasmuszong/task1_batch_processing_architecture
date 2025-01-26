@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import countDistinct, col, split, row_number
-from misc.parameters import JARS_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL, DB_PROPERTIES
+from misc.parameters import JARS_PATH, INTERMEDIATE_PROCESSING_TABLE, WEBSHOP_ACTIVITIES_TABLE, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL, DB_PROPERTIES
 
 class PostgresIntegration:
     def __init__(self, app_name, jars_path, executor_memory, executor_cores, executor_instances, driver_memory):
@@ -237,14 +237,11 @@ class PostgresIntegration:
             print(f"Error writing DataFrame to table {table_name}: {e}")
             raise
 
-# Configuration parameters
-APP_NAME = "Data Transformation"
-TABLE_NAME = "airflow"
 
 if __name__ == "__main__":
     # Initialize PostgresIntegration class
     postgres_integration = PostgresIntegration(
-        app_name=APP_NAME,
+        app_name="Data Transformation",
         jars_path=JARS_PATH,
         executor_memory=EXECUTOR_MEMORY,
         executor_cores=EXECUTOR_CORES,
@@ -260,7 +257,7 @@ if __name__ == "__main__":
         # Load table into df (stored as a class property)
         postgres_integration.read_table(
             jdbc_url=JDBC_URL,
-            table_name=TABLE_NAME,
+            table_name=INTERMEDIATE_PROCESSING_TABLE,
             db_properties=DB_PROPERTIES
         )
 
@@ -278,7 +275,7 @@ if __name__ == "__main__":
         # Write the DataFrame back to PostgreSQL
         postgres_integration.write_to_postgres(
             jdbc_url=JDBC_URL,
-            table_name="target_table",
+            table_name=WEBSHOP_ACTIVITIES_TABLE,
             db_properties=DB_PROPERTIES
         )
 

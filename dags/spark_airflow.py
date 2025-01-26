@@ -5,7 +5,9 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from datetime import timedelta
 import sys
 import os
-from misc.parameters import JARS_PATH
+from misc.parameters import JARS_PATH, INTERMEDIATE_PROCESSING_TABLE
+from drop_postgres_table import drop_postgres_table 
+
 
 # Add the jobs/python directory to the system path for importing scripts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../jobs/python"))
@@ -69,7 +71,15 @@ transform_with_spark = SparkSubmitOperator(
     dag=dag,
 )
 
-# Task 5: End job
+# Task 5: Drop the processing table after ETL processes
+drop_table_task = PythonOperator(
+    task_id='drop_table_task',
+    python_callable=drop_postgres_table,
+    op_args=[INTERMEDIATE_PROCESSING_TABLE],  # Replace with the actual table name
+    dag=dag,
+)
+
+# Task 6: End job
 end = PythonOperator(
     task_id='end',
     python_callable= lambda: print('Jobs completed successfully'),
@@ -77,4 +87,4 @@ end = PythonOperator(
 )
 
 # Define task dependencies
-start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> end
+start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> drop_table_task >> end

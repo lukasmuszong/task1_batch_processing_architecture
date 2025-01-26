@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
 from pyspark.sql.types import TimestampType, StructType, LongType, StructField, StringType, DoubleType
 import shutil
-from misc.parameters import JARS_PATH, NEW_DATA_PATH, PROCESSED_DATA_PATH, WEBSHOP_ACTIVITIES_TABLE, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
+from misc.parameters import JARS_PATH, NEW_DATA_PATH, PROCESSED_DATA_PATH, INTERMEDIATE_PROCESSING_TABLE, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
 from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 def preprocess_data():
@@ -41,7 +41,7 @@ def preprocess_data():
     """
     # Database connection details
     db_url = JDBC_URL  # PostgreSQL connection string
-    table_name = WEBSHOP_ACTIVITIES_TABLE  # Target table in PostgreSQL
+    table_name = INTERMEDIATE_PROCESSING_TABLE  # Target table in PostgreSQL
     input_folder = NEW_DATA_PATH  # Folder containing the CSV files
     processed_folder = PROCESSED_DATA_PATH  # Folder to move processed files
 

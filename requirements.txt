@@ -6,3 +6,4 @@ pyspark
 # Needed additionally
 pandas
 sqlalchemy
+psycopg2
