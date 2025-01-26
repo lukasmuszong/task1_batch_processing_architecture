@@ -1,1 +1,4 @@
 task1_batch_processing_architecture/*
+.idea/*
+logs/*
+data/*
