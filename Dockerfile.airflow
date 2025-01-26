@@ -1,0 +1,33 @@
+# Use the base Airflow image with tag 2.10.3
+FROM apache/airflow:2.10.3
+
+# Switch to root to install system dependencies
+USER root
+
+# Install necessary packages, including Java
+RUN apt-get update && \
+    apt-get install -y gcc python3-dev openjdk-17-jdk && \
+    apt-get clean
+
+# Create the directory for the PostgreSQL JDBC jar
+RUN mkdir -p /opt/airflow/spark/jars
+
+# Install the PostgreSQL JDBC driver
+RUN curl -o /opt/airflow/spark/jars/postgresql-42.7.4.jar \
+    https://jdbc.postgresql.org/download/postgresql-42.7.4.jar
+# Ensure the jar is accessible to Spark jobs
+ENV SPARK_JARS=/opt/airflow/spark/jars/postgresql-42.7.4.jar
+
+# Set JAVA_HOME environment variable for Java
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64
+ENV PATH $JAVA_HOME/bin:$PATH
+
+COPY requirements.txt ./requirements.txt
+
+# Revert to the airflow user to follow best practices for running Airflow
+USER airflow
+
+
+# Install Python dependencies
+#RUN pip install apache-airflow apache-airflow-providers-apache-spark pyspark
+RUN pip install -r requirements.txt
