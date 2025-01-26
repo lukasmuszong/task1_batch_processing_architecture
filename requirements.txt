@@ -1,0 +1,8 @@
+# Already used for spark setup
+apache-airflow
+apache-airflow-providers-apache-spark
+pyspark
+
+# Needed additionally
+pandas
+sqlalchemy

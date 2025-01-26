@@ -1,10 +1,18 @@
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import count, sum as _sum, countDistinct, col, split, row_number
+from misc.parameters import JARS_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL, DB_PROPERTIES
 
 class PostgresIntegration:
     def __init__(self, app_name, jars_path, executor_memory, executor_cores, executor_instances, driver_memory):
         """
         Initializes the Spark session with the given configurations.
+
+        :param app_name: Name of the Spark application.
+        :param jars_path: Path to the necessary JAR files (e.g., JDBC drivers).
+        :param executor_memory: Memory allocated per executor (e.g., '2g').
+        :param executor_cores: Number of cores allocated per executor.
+        :param executor_instances: Number of executor instances.
+        :param driver_memory: Memory allocated to the driver (e.g., '1g').
         """
         self.spark = SparkSession.builder \
             .appName(app_name) \
@@ -29,6 +37,10 @@ class PostgresIntegration:
     def read_table(self, jdbc_url, table_name, db_properties):
         """
         Reads a table from PostgreSQL into a DataFrame and stores it in self.df.
+
+        :param jdbc_url: JDBC URL for the PostgreSQL database.
+        :param table_name: Name of the table to read from the database.
+        :param db_properties: Dictionary containing database properties (e.g., user, password).
         """
         try:
             print(f"Reading data from table: {table_name}")
@@ -41,6 +53,8 @@ class PostgresIntegration:
     def show_dataframe(self, rows=10):
         """
         Displays the specified number of rows from the class's DataFrame.
+
+        :param rows: Number of rows to display (default is 10).
         """
         if self.df is None:
             print("No DataFrame is currently loaded. Please load data first.")
@@ -80,81 +94,14 @@ class PostgresIntegration:
             except Exception as e:
                 print(f"Error computing statistics for column {column}: {e}")
 
-    def count_unique_events(self, output_path=None):
-        """
-        Counts unique events per event_type in the class's DataFrame.
-        """
-        if self.df is None:
-            print("No DataFrame is currently loaded. Please load the data first.")
-            return
-
-        print("Counting unique events per event_type...")
-        try:
-            # Group by 'event_type' and count the events
-            event_counts = self.df.groupBy("event_type").agg(count("*").alias("event_count"))
-
-            # Optionally save the output to the specified path
-            if output_path:
-                event_counts.write.csv(output_path, header=True, mode="overwrite")
-                print(f"Event counts written to: {output_path}")
-
-            return event_counts
-        except Exception as e:
-            print(f"Error while counting unique events: {e}")
-            raise
-
-    def count_unique_products(self, output_path=None):
-        """
-        Counts unique product_id occurrences per event_type in the class's DataFrame.
-        """
-        if self.df is None:
-            print("No DataFrame is currently loaded. Please load the data first.")
-            return
-
-        print("Counting unique product_id occurrences per event_type...")
-        try:
-            # Group by 'event_type' and count unique product_id occurrences
-            product_event_counts = self.df.groupBy("event_type").agg(count("product_id").alias("product_count"))
-
-            # Optionally save the output to the specified path
-            if output_path:
-                product_event_counts.write.csv(output_path, header=True, mode="overwrite")
-                print(f"Product event counts written to: {output_path}")
-
-            return product_event_counts
-        except Exception as e:
-            print(f"Error while counting unique product_id occurrences: {e}")
-            raise
-
-    def aggregate_total_prices(self, output_path=None):
-        """
-        Aggregates the total prices per product_id in the class's DataFrame.
-        """
-        if self.df is None:
-            print("No DataFrame is currently loaded. Please load the data first.")
-            return
-
-        print("Aggregating total prices per product_id...")
-        try:
-            # Group by 'product_id' and aggregate the total prices
-            total_prices = self.df.groupBy("product_id").agg(_sum("price").alias("total_price"))
-
-            # Optionally save the output to the specified path
-            if output_path:
-                total_prices.write.csv(output_path, header=True, mode="overwrite")
-                print(f"Total prices written to: {output_path}")
-
-            return total_prices
-        except Exception as e:
-            print(f"Error while aggregating total prices: {e}")
-            raise
-
 
     def split_category_code(self):
         """
-        Split the 'category_code' column by '.' and add new columns to the DataFrame.
-        Each new column represents a part of the split category code.
-        The columns are named category_hierarchy_1, category_hierarchy_2, etc.
+        Splits the 'category_code' column by '.' and adds new columns to the DataFrame.
+        The new columns represent parts of the split category code and are named as:
+        category_hierarchy_1, category_hierarchy_2, etc.
+
+        :return: Modified DataFrame with additional columns for category hierarchy.
         """
         if self.df is None:
             print("DataFrame is not loaded. Please load the data first.")
@@ -186,8 +133,10 @@ class PostgresIntegration:
 
     def add_purchase_movement(self):
         """
-        Add a column 'purchase_movement' to the DataFrame that increases based on
-        the keys product_id and user_session, as the event_time transitions into the future.
+        Adds a 'purchase_movement' column to the DataFrame.
+        The value increments based on the 'product_id' and 'user_session' columns, ordered by 'event_time'.
+
+        :return: Modified DataFrame with the new 'purchase_movement' column.
         """
         if self.df is None:
             print("DataFrame is not loaded. Please load the data first.")
@@ -212,26 +161,35 @@ class PostgresIntegration:
 
     def stop(self):
         """
-        Stops the Spark session.
+        Stops the Spark session, releasing all resources.
         """
         self.spark.stop()
         print("Spark session stopped successfully.")
 
+    def write_to_postgres(self, jdbc_url, table_name, db_properties, mode="append"):
+        """
+        Writes the current DataFrame to a PostgreSQL database table.
+
+        :param jdbc_url: JDBC URL for the PostgreSQL database.
+        :param table_name: Target table name in the PostgreSQL database.
+        :param db_properties: Dictionary containing database properties (e.g., user, password).
+        :param mode: Save mode for the DataFrame (e.g., 'overwrite', 'append').
+        """
+        if self.df is None:
+            print("No DataFrame is currently loaded. Please load data first.")
+            return
+
+        try:
+            print(f"Writing DataFrame to PostgreSQL table: {table_name}")
+            self.df.write.jdbc(url=jdbc_url, table=table_name, mode=mode, properties=db_properties)
+            print(f"DataFrame successfully written to table: {table_name}")
+        except Exception as e:
+            print(f"Error writing DataFrame to table {table_name}: {e}")
+            raise
+
 # Configuration parameters
 APP_NAME = "Postgres Integration"
-JARS_PATH = "/opt/airflow/spark/jars/postgresql-42.7.4.jar"
-EXECUTOR_MEMORY = "2g"
-EXECUTOR_CORES = "2"
-EXECUTOR_INSTANCES = "3"
-DRIVER_MEMORY = "4g"
-
-JDBC_URL = "jdbc:postgresql://postgres:5432/airflow"
 TABLE_NAME = "airflow"
-DB_PROPERTIES = {
-    "user": "airflow",
-    "password": "airflow",
-    "driver": "org.postgresql.Driver"
-}
 
 if __name__ == "__main__":
     # Initialize PostgresIntegration class
@@ -266,12 +224,27 @@ if __name__ == "__main__":
         dataframe = postgres_integration.split_category_code()
         dataframe = postgres_integration.add_purchase_movement()
 
+        # Write the DataFrame back to PostgreSQL
+        postgres_integration.write_to_postgres(
+            jdbc_url=JDBC_URL,
+            table_name="target_table",
+            db_properties=DB_PROPERTIES
+        )
 
-        # Perform transformations and save results
-        # event_counts = postgres_integration.count_unique_events(output_path="output/event_counts")
-        # product_event_counts = postgres_integration.count_unique_products(output_path="output/product_event_counts")
-        # total_prices = postgres_integration.aggregate_total_prices(output_path="output/total_prices")
+        # Display contents of the DataFrame
+        postgres_integration.show_dataframe(rows=10)
 
+        #####
+
+        # Add functions to this class
+        # create a item database
+        # create category database
+        # create user database
+
+        # Maybe set it up so that the dag only calls individual functions of this class??
+        # so that the microservice architecture is complete
+
+        #####
 
 
     except Exception as e:
