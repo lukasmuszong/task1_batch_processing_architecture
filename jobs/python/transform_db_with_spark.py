@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession, Window
-from pyspark.sql.functions import count, sum as _sum, countDistinct, col, split, row_number
+from pyspark.sql.functions import countDistinct, col, split, row_number
 from misc.parameters import JARS_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL, DB_PROPERTIES
 
 class PostgresIntegration:
@@ -33,6 +33,56 @@ class PostgresIntegration:
         print("Spark Configuration:")
         for key, value in self.spark_context.getConf().getAll():
             print(f"{key} = {value}")
+
+    def create_product_master_dataframe(self, input_df):
+        """
+        Creates a DataFrame for the product master data from an input DataFrame.
+        - Checks if the required hierarchy columns exist.
+        - Filters out empty product_id values.
+        - Keeps only unique records.
+
+        :param input_df: Input DataFrame containing the product data.
+        :return: A DataFrame containing product master data if the hierarchy columns exist.
+        :raises: ValueError if any of the hierarchy columns do not exist in the input DataFrame.
+        """
+        if input_df is None:
+            print("Input DataFrame is not loaded. Please load data first.")
+            return None
+
+        # List of required hierarchy columns
+        required_columns = [
+            "category_hierarchy_1",
+            "category_hierarchy_2",
+            "category_hierarchy_3",
+            "category_hierarchy_4"
+        ]
+
+        # Check if the required hierarchy columns exist in the input DataFrame
+        missing_columns = [col for col in required_columns if col not in input_df.columns]
+
+        if missing_columns:
+            raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
+
+        # Step 1: Filter out rows where 'product_id' is null or empty
+        cleaned_df = input_df.filter(col("product_id").isNotNull() & (col("product_id") != ""))
+
+        # Step 2: Remove duplicates based on all columns (keeps unique rows)
+        cleaned_df = cleaned_df.dropDuplicates()
+
+        # Step 3: Select the required columns for the product master data
+        product_master_df = cleaned_df.select(
+            "product_id",
+            "category_id",
+            "category_code",
+            "category_hierarchy_1",
+            "category_hierarchy_2",
+            "category_hierarchy_3",
+            "category_hierarchy_4",
+            "brand"
+        )
+
+        print("Product master DataFrame created successfully.")
+        return product_master_df
 
     def read_table(self, jdbc_url, table_name, db_properties):
         """
@@ -188,7 +238,7 @@ class PostgresIntegration:
             raise
 
 # Configuration parameters
-APP_NAME = "Postgres Integration"
+APP_NAME = "Data Transformation"
 TABLE_NAME = "airflow"
 
 if __name__ == "__main__":
@@ -221,8 +271,9 @@ if __name__ == "__main__":
         postgres_integration.show_dataframe(rows=10)
 
         # Apply transformations
-        dataframe = postgres_integration.split_category_code()
-        dataframe = postgres_integration.add_purchase_movement()
+        postgres_integration.split_category_code()
+        postgres_integration.add_purchase_movement()
+        dataframe = postgres_integration.df
 
         # Write the DataFrame back to PostgreSQL
         postgres_integration.write_to_postgres(
@@ -233,6 +284,21 @@ if __name__ == "__main__":
 
         # Display contents of the DataFrame
         postgres_integration.show_dataframe(rows=10)
+        print('_____________-')
+        dataframe.show()
+
+        # Creating dataframe of product master data
+        product_master_df = postgres_integration.create_product_master_dataframe(dataframe)
+        # Show the resulting DataFrame (for debugging or validation)
+        product_master_df.show()
+
+        # Write the master data table to PostgreSQL
+        postgres_integration.df = product_master_df
+        postgres_integration.write_to_postgres(
+            jdbc_url=JDBC_URL,
+            table_name="product_master_table",
+            db_properties=DB_PROPERTIES
+        )
 
         #####
 

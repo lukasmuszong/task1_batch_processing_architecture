@@ -53,22 +53,35 @@ def preprocess_data():
         except Exception as e:
             raise RuntimeError(f"Failed to read the CSV file: {csv_file_path}. Error: {e}")
 
+        # Record the initial count of rows
+        initial_count = df.count()
+        print(f"Initial row count: {initial_count}")
+
         # Preprocessing steps
         print("Preprocessing data...")
 
         # Step 1: Deduplication
-        df = df.dropDuplicates(["event_time", "user_session", "product_id"])
+        df_deduplicated = df.dropDuplicates(["event_time", "user_session", "product_id"])
+        dedup_count = initial_count - df_deduplicated.count()
+        print(f"Rows dropped in deduplication: {dedup_count}")
 
         # Step 2: Null checks for critical columns
-        df = df.dropna(subset=["event_time", "event_type", "product_id", "user_id", "user_session"])
+        df_cleaned = df_deduplicated.dropna(
+            subset=["event_time", "event_type", "product_id", "user_id", "user_session"])
+        null_check_count = df_deduplicated.count() - df_cleaned.count()
+        print(f"Rows dropped in null checks: {null_check_count}")
 
         # Step 3: Add processed date if not already in the file
-        df = df.withColumn("processed_date", lit(current_date()))
+        df_final = df_cleaned.withColumn("processed_date", lit(current_date()))
+
+        # Final row count after all preprocessing
+        final_count = df_final.count()
+        print(f"Final row count after preprocessing: {final_count}")
 
         # Step 4: Write the DataFrame to PostgreSQL
         print("Writing data to PostgreSQL...")
         try:
-            df.write \
+            df_final.write \
                 .format("jdbc") \
                 .option("url", db_url) \
                 .option("dbtable", table_name) \

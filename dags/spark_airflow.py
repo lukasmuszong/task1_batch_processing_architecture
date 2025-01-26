@@ -80,10 +80,6 @@ transform_with_spark = SparkSubmitOperator(
     conf={
         'spark.jars': JARS_PATH,  # Path to the JDBC driver
     },
-    #application_args=[
-    #    '--input_path', '/opt/airflow/data/raw_data.csv',  # Path to the raw data
-    #    '--output_dir', '/opt/airflow/data/transformed',  # Path to save transformed outputs
-    #],
     dag=dag,
 )
 
