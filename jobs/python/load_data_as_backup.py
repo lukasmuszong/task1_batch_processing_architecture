@@ -1,4 +1,5 @@
 import os
+import re
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
 from misc.parameters import JARS_PATH, NEW_DATA_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
@@ -51,7 +52,8 @@ def load_csvs_to_postgres():
         for filename in os.listdir(base_folder):
             if filename.endswith(".csv"):
                 csv_file_path = os.path.join(base_folder, filename)
-                backup_table_name = f"backup_{os.path.splitext(filename)[0]}"  # Table name without the file extension
+                # Replace problematic characters (like '-') in the table name
+                backup_table_name = re.sub(r'[^a-zA-Z0-9_]', '_', f"backup_{os.path.splitext(filename)[0]}")
 
                 print(f"Processing file: {csv_file_path} -> Backup table: {backup_table_name}")
 
