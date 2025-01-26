@@ -2,3 +2,5 @@
 logs/
 data/
 jobs/python/__pycache__/
+misc/__pycache__/
+dags/__pycache__/
