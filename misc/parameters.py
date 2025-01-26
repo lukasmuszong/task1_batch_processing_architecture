@@ -10,6 +10,9 @@ DB_PROPERTIES = {
     "password": "airflow",
     "driver": "org.postgresql.Driver"
 }
+POSTGRES_HOST = "postgres"
+POSTGRES_PORT = "5432"
+POSTGRES_DB = "airflow"
 # Folder containing CSV files
 NEW_DATA_PATH = "/opt/airflow/data/new_month/"
 PROCESSED_DATA_PATH = "/opt/airflow/data/processed/"

@@ -1,48 +1,41 @@
-import psycopg2
-from misc.parameters import JDBC_URL, INTERMEDIATE_PROCESSING_TABLE
+from sqlalchemy import create_engine, text
+from misc.parameters import POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, INTERMEDIATE_PROCESSING_TABLE
 from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 
 def drop_postgres_table(table_name):
     """
-    Drops a specified table from PostgreSQL.
+    Drops a specified table from PostgreSQL using SQLAlchemy.
 
     :param table_name: Name of the table to be dropped.
     :raises: RuntimeError if the table cannot be dropped or if there is an error with the connection.
     """
     try:
-        # Connect to PostgreSQL
-        conn = psycopg2.connect(
-            dbname=JDBC_URL.split('/')[-1],  # Extract the database name from JDBC_URL
-            user=POSTGRES_USER,
-            password=POSTGRES_PASSWORD
-        )
+        # Extract database name from JDBC_URL and construct SQLAlchemy connection string
+        db_name = POSTGRES_DB
+        host = POSTGRES_HOST
+        port = POSTGRES_PORT
 
-        # Create a cursor object
-        cur = conn.cursor()
+        # Construct the SQLAlchemy connection string
+        connection_string = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}:{port}/{db_name}'
 
-        # Construct the DROP TABLE query
-        drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
+        # Create SQLAlchemy engine
+        engine = create_engine(connection_string)
 
-        # Execute the query
-        print(f"Dropping table {table_name}...")
-        cur.execute(drop_table_query)
+        # Create a connection
+        with engine.connect() as conn:
+            # Construct the DROP TABLE query
+            drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
 
-        # Commit the transaction
-        conn.commit()
+            # Execute the query
+            print(f"Dropping table {table_name}...")
+            conn.execute(text(drop_table_query))
 
         print(f"Table {table_name} has been successfully dropped.")
 
     except Exception as e:
         print(f"An error occurred while dropping the table {table_name}: {e}")
         raise RuntimeError(f"Failed to drop table {table_name}. Error: {e}")
-
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
 
 if __name__ == "__main__":

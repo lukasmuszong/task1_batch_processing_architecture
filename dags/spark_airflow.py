@@ -6,11 +6,10 @@ from datetime import timedelta
 import sys
 import os
 from misc.parameters import JARS_PATH, INTERMEDIATE_PROCESSING_TABLE
-from drop_postgres_table import drop_postgres_table 
-
 
 # Add the jobs/python directory to the system path for importing scripts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../jobs/python"))
+from drop_postgres_table import drop_postgres_table
 
 # Default arguments
 default_args = {
