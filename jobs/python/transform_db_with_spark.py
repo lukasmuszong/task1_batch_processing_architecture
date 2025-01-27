@@ -233,7 +233,6 @@ if __name__ == "__main__":
         # Apply transformations
         postgres_integration.split_category_code()
         postgres_integration.add_purchase_movement()
-        # dataframe = postgres_integration.df
 
         # Write the DataFrame back to PostgreSQL
         postgres_integration.write_to_postgres(
@@ -250,8 +249,6 @@ if __name__ == "__main__":
         #####
 
         # Add functions to this class
-        # create a item database
-        # create category database
         # create user database
 
         # Maybe set it up so that the dag only calls individual functions of this class??

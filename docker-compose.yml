@@ -97,9 +97,10 @@ services:
 
   scheduler:
     <<: *airflow-common
-    command: bash -c "airflow db migrate && \
-                      airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email lukas.muszong@iubh.de --password admin && \
-                      airflow scheduler"
+    command: bash -c "bash /opt/airflow/dags/scripts/activate_dag.sh && \
+                    airflow db migrate && \
+                    airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email lukas.muszong@iubh.de --password admin && \
+                    airflow scheduler"
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,7 +111,7 @@ services:
 
   webserver:
     <<: *airflow-common
-    command: webserver
+    command: bash -c "bash /opt/airflow/scripts/activate_dag.sh && airflow webserver"
     ports:
       - "8080:8080"
     depends_on:
