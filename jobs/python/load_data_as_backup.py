@@ -2,7 +2,8 @@ import os
 import re
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
-from misc.parameters import JARS_PATH, NEW_DATA_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
+from misc.parameters import (JARS_PATH, NEW_DATA_PATH, EXECUTOR_MEMORY, EXECUTOR_CORES,
+                             EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL)
 from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 def load_csvs_to_postgres():

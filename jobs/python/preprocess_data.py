@@ -1,9 +1,13 @@
 import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, current_date
-from pyspark.sql.types import TimestampType, StructType, LongType, StructField, StringType, DoubleType
+from pyspark.sql.types import (TimestampType, StructType, LongType, StructField,
+                               StringType, DoubleType)
 import shutil
-from misc.parameters import JARS_PATH, NEW_DATA_PATH, PROCESSED_DATA_PATH, INTERMEDIATE_PROCESSING_TABLE, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL
+from misc.parameters import (JARS_PATH, NEW_DATA_PATH, PROCESSED_DATA_PATH,
+                             INTERMEDIATE_PROCESSING_TABLE, EXECUTOR_MEMORY,
+                             EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY,
+                             JDBC_URL)
 from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 def preprocess_data():

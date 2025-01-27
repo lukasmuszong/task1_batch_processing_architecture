@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, text
-from misc.parameters import POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, INTERMEDIATE_PROCESSING_TABLE
+from misc.parameters import (POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB,
+                             INTERMEDIATE_PROCESSING_TABLE)
 from misc.secrets import POSTGRES_USER, POSTGRES_PASSWORD
 
 

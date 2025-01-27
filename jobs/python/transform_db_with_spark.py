@@ -1,9 +1,13 @@
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import countDistinct, col, split, row_number
-from misc.parameters import JARS_PATH, INTERMEDIATE_PROCESSING_TABLE, WEBSHOP_ACTIVITIES_TABLE, EXECUTOR_MEMORY, EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY, JDBC_URL, DB_PROPERTIES
+from misc.parameters import (JARS_PATH, INTERMEDIATE_PROCESSING_TABLE,
+                             WEBSHOP_ACTIVITIES_TABLE, EXECUTOR_MEMORY,
+                             EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY,
+                             JDBC_URL, DB_PROPERTIES)
 
 class PostgresIntegration:
-    def __init__(self, app_name, jars_path, executor_memory, executor_cores, executor_instances, driver_memory):
+    def __init__(self, app_name, jars_path, executor_memory, executor_cores,
+                 executor_instances, driver_memory):
         """
         Initializes the Spark session with the given configurations.
 
@@ -44,7 +48,11 @@ class PostgresIntegration:
         """
         try:
             print(f"Reading data from table: {table_name}")
-            self.df = self.spark.read.jdbc(url=jdbc_url, table=table_name, properties=db_properties)
+            self.df = self.spark.read.jdbc(
+                url=jdbc_url,
+                table=table_name,
+                properties=db_properties
+            )
             print(f"Table '{table_name}' successfully loaded into DataFrame.")
         except Exception as e:
             print(f"Error reading table {table_name}: {e}")
@@ -181,7 +189,12 @@ class PostgresIntegration:
 
         try:
             print(f"Writing DataFrame to PostgreSQL table: {table_name}")
-            self.df.write.jdbc(url=jdbc_url, table=table_name, mode=mode, properties=db_properties)
+            self.df.write.jdbc(
+                url=jdbc_url,
+                table=table_name,
+                mode=mode,
+                properties=db_properties
+            )
             print(f"DataFrame successfully written to table: {table_name}")
         except Exception as e:
             print(f"Error writing DataFrame to table {table_name}: {e}")
