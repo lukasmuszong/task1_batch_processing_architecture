@@ -1,4 +1,4 @@
-version: '3'
+#version: '3'
 
 x-spark-common: &spark-common
   image: bitnami/spark:latest
@@ -24,6 +24,7 @@ x-airflow-common: &airflow-common
     - ./logs:/opt/airflow/logs
     - ./data:/opt/airflow/data
     - ./misc:/opt/airflow/misc
+    - ./dags/scripts:/opt/airflow/scripts
   depends_on:
     - postgres
   networks:
@@ -85,7 +86,7 @@ services:
   init:
     <<: *airflow-common
     command: bash -c "airflow db migrate && \
-                      python /opt/airflow/dags/scripts/create_spark_connection.py"
+                      python /opt/airflow/scripts/create_spark_connection.py"
                     # This is script has the consequence of the spark-submit operation
                     #   not working due to wrong "master" setup
                     #   yarn is used instead of the local spark-master-1
@@ -97,10 +98,11 @@ services:
 
   scheduler:
     <<: *airflow-common
-    command: bash -c "bash /opt/airflow/dags/scripts/activate_dag.sh && \
-                    airflow db migrate && \
-                    airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email lukas.muszong@iubh.de --password admin && \
-                    airflow scheduler"
+    command: bash -c "
+      airflow db migrate && \
+      airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email lukas.muszong@iubh.de --password admin && \
+      bash /opt/airflow/dags/scripts/activate_dag.sh && \
+      airflow scheduler"
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,7 +113,7 @@ services:
 
   webserver:
     <<: *airflow-common
-    command: bash -c "bash /opt/airflow/scripts/activate_dag.sh && airflow webserver"
+    command: bash -c "airflow webserver"
     ports:
       - "8080:8080"
     depends_on:

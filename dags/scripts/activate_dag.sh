@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Wait for the Airflow webserver to be up
-sleep 20
+# Wait for 30 seconds
+echo "Waiting for 30 seconds..."
+sleep 30
 
-# Trigger the DAG activation via CLI
+# Unpause the DAG
+echo "Unpausing the DAG sparking_flow..."
 airflow dags unpause sparking_flow
