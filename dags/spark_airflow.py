@@ -10,6 +10,8 @@ from misc.parameters import JARS_PATH, INTERMEDIATE_PROCESSING_TABLE
 # Add the jobs/python directory to the system path for importing scripts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../jobs/python"))
 from drop_postgres_table import drop_postgres_table
+from update_product_master_data import update_product_master_data
+
 
 # Default arguments
 default_args = {
@@ -70,7 +72,14 @@ transform_with_spark = SparkSubmitOperator(
     dag=dag,
 )
 
-# Task 5: Drop the processing table after ETL processes
+# Task 5: Update the product master data table
+update_product_master_data_task = PythonOperator(
+    task_id="update_product_master_task",
+    python_callable=update_product_master_data,
+    dag=dag,
+)
+
+# Task 6: Drop the processing table after ETL processes
 drop_table_task = PythonOperator(
     task_id='drop_table_task',
     python_callable=drop_postgres_table,
@@ -78,7 +87,7 @@ drop_table_task = PythonOperator(
     dag=dag,
 )
 
-# Task 6: End job
+# Task 7: End job
 end = PythonOperator(
     task_id='end',
     python_callable= lambda: print('Jobs completed successfully'),
@@ -86,4 +95,4 @@ end = PythonOperator(
 )
 
 # Define task dependencies
-start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> drop_table_task >> end
+start >> load_data_backup_task >> preprocess_data_task >> transform_with_spark >> update_product_master_data_task >> drop_table_task >> end
