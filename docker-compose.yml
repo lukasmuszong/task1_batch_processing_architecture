@@ -132,6 +132,7 @@ services:
       environment:
         - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
         - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+        - GF_SOURCE_DB=${WEBSHOP_ACTIVITIES_TABLE}
       env_file:
         - .env
       volumes:
