@@ -14,7 +14,7 @@
       "datasource": "PostgreSQL",
       "targets": [
         {
-          "rawSql": "SELECT event_time::date AS time, SUM(price) AS total_sales FROM airflow WHERE $__timeFilter(event_time) AND event_type = 'purchase' GROUP BY event_time::date ORDER BY event_time::date;",
+          "rawSql": "SELECT event_time::date AS time, SUM(price) AS total_sales FROM ${WEBSHOP_ACTIVITIES_TABLE} WHERE $__timeFilter(event_time) AND event_type = 'purchase' GROUP BY event_time::date ORDER BY event_time::date;",
           "format": "time_series"
         }
       ],

@@ -5,7 +5,7 @@ datasources:
     type: postgres
     access: proxy
     url: postgres:5432
-    database: airflow
+    database: ${WEBSHOP_ACTIVITIES_TABLE}
     user: airflow
     secureJsonData:
       password: airflow
