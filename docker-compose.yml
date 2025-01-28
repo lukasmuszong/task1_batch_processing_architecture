@@ -89,10 +89,6 @@ services:
     <<: *airflow-common
     command: bash -c "airflow db migrate && \
                       python /opt/airflow/scripts/create_spark_connection.py"
-                    # This is script has the consequence of the spark-submit operation
-                    #   not working due to wrong "master" setup
-                    #   yarn is used instead of the local spark-master-1
-
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,16 +130,16 @@ services:
       ports:
         - "3000:3000"
       environment:
-        - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}  # Admin username from .env
-        - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}  # Admin password from .env
+        - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+        - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
       env_file:
         - .env
       volumes:
-        - grafana_data:/var/lib/grafana  # Persistent storage for Grafana data
+        - grafana_data:/var/lib/grafana
         - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
         - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       depends_on:
-        - postgres  # PostgreSQL as Grafana's data source
+        - postgres
       networks:
         - flowing-spark
       healthcheck:

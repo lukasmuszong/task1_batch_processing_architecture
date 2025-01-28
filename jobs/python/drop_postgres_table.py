@@ -12,12 +12,12 @@ def drop_postgres_table(table_name):
     :raises: RuntimeError if the table cannot be dropped or if there is an error with the connection.
     """
     try:
-        # Extract database name from JDBC_URL and construct SQLAlchemy connection string
+        # DB access variables
         db_name = POSTGRES_DB
         host = POSTGRES_HOST
         port = POSTGRES_PORT
 
-        # Construct the SQLAlchemy connection string
+        # SQLAlchemy connection string
         connection_string = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}:{port}/{db_name}'
 
         # Create SQLAlchemy engine
@@ -25,7 +25,7 @@ def drop_postgres_table(table_name):
 
         # Create a connection
         with engine.connect() as conn:
-            # Construct the DROP TABLE query
+            # DROP TABLE query
             drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
 
             # Execute the query

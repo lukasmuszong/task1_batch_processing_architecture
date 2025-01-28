@@ -35,8 +35,9 @@ def load_csvs_to_postgres():
             None
         """
     # Database connection details
-    db_url = JDBC_URL  # PostgreSQL connection string
-    base_folder = NEW_DATA_PATH  # Folder containing CSV files
+    db_url = JDBC_URL
+    # Folder containing CSV files
+    base_folder = NEW_DATA_PATH
 
     # Initialize Spark session
     spark = SparkSession.builder \

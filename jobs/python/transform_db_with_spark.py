@@ -129,7 +129,7 @@ class PostgresIntegration:
         self.df = self.df.withColumn("category_hierarchy_1", split_col.getItem(0)) \
             .withColumn("category_hierarchy_2", split_col.getItem(1)) \
             .withColumn("category_hierarchy_3", split_col.getItem(2)) \
-            .withColumn("category_hierarchy_4", split_col.getItem(3))  # Optional, depends on your needs
+            .withColumn("category_hierarchy_4", split_col.getItem(3))
 
         # Handle None values by filling them with empty strings or another placeholder if needed
         self.df = self.df.fillna(

@@ -44,10 +44,13 @@ def preprocess_data():
             None
     """
     # Database connection details
-    db_url = JDBC_URL  # PostgreSQL connection string
-    table_name = INTERMEDIATE_PROCESSING_TABLE  # Target table in PostgreSQL
-    input_folder = NEW_DATA_PATH  # Folder containing the CSV files
-    processed_folder = PROCESSED_DATA_PATH  # Folder to move processed files
+    db_url = JDBC_URL
+    # Target table in PostgreSQL
+    table_name = INTERMEDIATE_PROCESSING_TABLE
+    # Folder containing the CSV files
+    input_folder = NEW_DATA_PATH
+    # Folder to move processed files
+    processed_folder = PROCESSED_DATA_PATH
 
     # Get the list of CSV files in the input folder
     csv_files = [f for f in os.listdir(input_folder) if f.endswith('.csv')]
@@ -67,7 +70,8 @@ def preprocess_data():
         .getOrCreate()
 
     for csv_file in csv_files:
-        csv_file_path = os.path.join(input_folder, csv_file)  # Full path to the CSV file
+        # Full path to the CSV file
+        csv_file_path = os.path.join(input_folder, csv_file)
         print(f"Processing file: {csv_file_path}")
 
         # Define schema for validation
@@ -92,7 +96,8 @@ def preprocess_data():
                 .load(csv_file_path)
         except Exception as e:
             print(f"Failed to read the CSV file: {csv_file_path}. Error: {e}")
-            continue  # Move on to the next file if one fails
+            # Move on to the next file if one fails
+            continue
 
         # Record the initial count of rows
         initial_count = df.count()
@@ -133,7 +138,8 @@ def preprocess_data():
                 .save()
         except Exception as e:
             print(f"Failed to write data to PostgreSQL table {table_name}. Error: {e}")
-            continue  # Continue processing other files even if one fails
+            # Continue processing other files even if one fails
+            continue
 
         print(f"Data from {csv_file_path} has been successfully loaded into the {table_name} table.")
 

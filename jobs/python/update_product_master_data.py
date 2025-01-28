@@ -52,7 +52,7 @@ def ensure_table_exists(table_name):
             print(f"Table {table_name} has been successfully created or already exists.")
 
     except Exception as e:
-        print(f"An error occurred while ensuring the table {table_name}: {e}")
+        print(f"An error occurred while ensuring the table {table_name} exists: {e}")
         raise RuntimeError(f"Failed to ensure table {table_name}. Error: {e}")
 
 
