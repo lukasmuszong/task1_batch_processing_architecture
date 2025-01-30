@@ -12,3 +12,10 @@
  8. Run the DAG "sparking_flow" manually.
  9. Now you can log into the Grafana interface http://localhost:3000 using the credentials (admin, admin).
 10. View the dashboards.
+
+
+
+Steps:
+
+- gh auth login
+- gh repo clone lukasmuszong/task1_batch_processing_architecture
