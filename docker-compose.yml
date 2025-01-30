@@ -4,7 +4,7 @@ x-spark-common: &spark-common
   image: bitnami/spark:latest
   build:
     context: .
-    dockerfile: Dockerfile.spark  # Specify a custom Dockerfile for Spark
+    dockerfile: Dockerfile.spark # Specify a custom Dockerfile for Spark
   volumes:
     - ./jobs:/opt/bitnami/spark/jobs
     - ./misc:/opt/airflow/misc
@@ -33,6 +33,7 @@ x-airflow-common: &airflow-common
 services:
   spark-master:
     <<: *spark-common
+    container_name: spark-master-1
     command: |
       /bin/bash -c "
         /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.master.Master
@@ -43,6 +44,7 @@ services:
 
   spark-worker-1:
     <<: *spark-common
+    container_name: spark-worker-1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -54,6 +56,7 @@ services:
 
   spark-worker-2:
     <<: *spark-common
+    container_name: spark-worker-2
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -84,23 +87,19 @@ services:
       timeout: 5s
       retries: 5
 
- # Database initializer
+  # Database initializer
   init:
     <<: *airflow-common
-    command: bash -c "airflow db migrate && \
-                      python /opt/airflow/scripts/create_spark_connection.py"
+    command: bash -c "airflow db migrate && \ python /opt/airflow/scripts/create_spark_connection.py"
     depends_on:
       postgres:
         condition: service_healthy
-    restart: "no"  # Run only once, no restart needed
+    restart: "no" # Run only once, no restart needed
 
   scheduler:
     <<: *airflow-common
-    command: bash -c "
-      airflow db migrate && \
-      airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email ${AIRFLOW_ADMIN_EMAIL} --password ${AIRFLOW_ADMIN_PASSWORD} && \
-      bash /opt/airflow/dags/scripts/activate_dag.sh && \
-      airflow scheduler"
+    container_name: scheduler
+    command: bash -c " airflow db migrate && \ airflow users create --username admin --firstname Lukas --lastname Muszong --role Admin --email ${AIRFLOW_ADMIN_EMAIL} --password ${AIRFLOW_ADMIN_PASSWORD} && \ bash /opt/airflow/dags/scripts/activate_dag.sh && \ airflow scheduler"
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,6 +112,7 @@ services:
 
   webserver:
     <<: *airflow-common
+    container_name: webserver
     command: bash -c "airflow webserver"
     ports:
       - "8080:8080"
@@ -125,32 +125,33 @@ services:
       - flowing-spark
 
   grafana:
-      image: grafana/grafana:latest
-      container_name: grafana
-      ports:
-        - "3000:3000"
-      environment:
-        - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
-        - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
-        - GF_SOURCE_DB=${WEBSHOP_ACTIVITIES_TABLE}
-      env_file:
-        - .env
-      volumes:
-        - grafana_data:/var/lib/grafana
-        - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-        - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      depends_on:
-        - postgres
-      networks:
-        - flowing-spark
-      healthcheck:
-        test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
-        interval: 30s
-        timeout: 5s
-        retries: 3
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SOURCE_DB=${WEBSHOP_ACTIVITIES_TABLE}
+    env_file:
+      - .env
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - postgres
+    networks:
+      - flowing-spark
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   flowing-spark:
+
 
 volumes:
   pg_data:
