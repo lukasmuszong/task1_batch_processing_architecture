@@ -5,6 +5,7 @@ from misc.parameters import (JARS_PATH, INTERMEDIATE_PROCESSING_TABLE,
                              EXECUTOR_CORES, EXECUTOR_INSTANCES, DRIVER_MEMORY,
                              JDBC_URL, DB_PROPERTIES)
 
+
 class PostgresIntegration:
     def __init__(self, app_name, jars_path, executor_memory, executor_cores,
                  executor_instances, driver_memory):
@@ -92,16 +93,18 @@ class PostgresIntegration:
 
                 # If unique values are fewer than 15, list them
                 if unique_count < 15:
-                    unique_values = self.df.select(col(column)).distinct().limit(15).rdd.flatMap(lambda x: x).collect()
+                    unique_values = self.df.select(col(column)).distinct().limit(
+                        15).rdd.flatMap(lambda x: x).collect()
                     print(f"--Unique '{column}' Values: {unique_values}")
                 else:
                     # If unique values are 15 or more, display 5 examples of unique values
-                    sample_values = self.df.select(col(column)).distinct().limit(5).rdd.flatMap(lambda x: x).collect()
-                    print(f"--Sample of Unique '{column}' Values (5 examples): {sample_values}")
+                    sample_values = self.df.select(col(column)).distinct().limit(
+                        5).rdd.flatMap(lambda x: x).collect()
+                    print(
+                        f"--Sample of Unique '{column}' Values (5 examples): {sample_values}")
 
             except Exception as e:
                 print(f"Error computing statistics for column {column}: {e}")
-
 
     def split_category_code(self):
         """
@@ -156,13 +159,16 @@ class PostgresIntegration:
             return self.df
 
         # Ensure event_time is in the correct format (timestamp)
-        self.df = self.df.withColumn("event_time", col("event_time").cast("timestamp"))
+        self.df = self.df.withColumn(
+            "event_time", col("event_time").cast("timestamp"))
 
         # Define a window specification to partition by product_id and user_session, and order by event_time
-        window_spec = Window.partitionBy("product_id", "user_session").orderBy("event_time")
+        window_spec = Window.partitionBy(
+            "product_id", "user_session").orderBy("event_time")
 
         # Add a new column 'purchase_movement' based on the row number for each partition
-        self.df = self.df.withColumn("purchase_movement", row_number().over(window_spec))
+        self.df = self.df.withColumn(
+            "purchase_movement", row_number().over(window_spec))
         print("Purchase movement columns added successfully.")
 
         return self.df
@@ -244,18 +250,6 @@ if __name__ == "__main__":
         # Display contents of the DataFrame
         postgres_integration.show_dataframe(rows=10)
         postgres_integration.display_statistics()
-
-
-        #####
-
-        # Add functions to this class
-        # create user database
-
-        # Maybe set it up so that the dag only calls individual functions of this class??
-        # so that the microservice architecture is complete
-
-        #####
-
 
     except Exception as e:
         print(f"An error occurred: {e}")
